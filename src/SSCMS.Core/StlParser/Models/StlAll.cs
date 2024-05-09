@@ -9,6 +9,9 @@ namespace SSCMS.Core.StlParser.Models
         public static SortedList<string, Type> Elements => new SortedList<string, Type>
         {
             {
+                StlFirendLink.ElementName,
+                typeof(StlFirendLink)},
+            {
                 StlB.ElementName,
                 typeof(StlB)
             },
