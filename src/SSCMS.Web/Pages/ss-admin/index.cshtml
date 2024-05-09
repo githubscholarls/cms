@@ -7,9 +7,6 @@
 <header id="header">
   
   <div class="logo">
-    <a :href="getHostUrl()" target="_blank">
-      <img :src="adminLogoUrl" />
-    </a>
   </div>
 
   <template v-if="isDesktop">
@@ -20,92 +17,6 @@
 
     <div class="right">
 
-      <el-popover
-        v-if="isSafeMode"
-        placement="bottom"
-        width="480"
-        trigger="hover">
-
-        <div>
-          <h4 style="margin: 5px; text-align: center">SSCMS 系统当前处于安全模式</h4>
-
-          <el-row style="text-align: center; padding: 10px 0;">
-            <el-link type="primary" href="https://sscms.com/docs/v7/getting-started/config/safe-mode.html" target="_blank">请参考安全模式帮助文档了解详情</el-link>
-          </el-row>
-        </div>
-
-        <el-button slot="reference" type="info" size="mini" icon="el-icon-lock">安全模式</el-button>
-
-      </el-popover>
-
-      <el-popover
-        v-if="!isAdminUpdateDisabled && (newCms || newPlugins.length > 0)"
-        placement="bottom"
-        width="480"
-        trigger="hover">
-
-        <div v-if="newCms">
-          <h4 style="margin: 5px;">发现 CMS 新版本</h4>
-
-          <el-table :data="[newCms]" style="width: 100%">
-            <el-table-column label="当前版本">
-              <template slot-scope="scope">
-                <el-tag type="primary">{{ scope.row.current }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="最新版本">
-              <template slot-scope="scope">
-                <el-tag type="success">{{ scope.row.version }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="createdDate" label="发布日期" width="140"></el-table-column>
-          </el-table>
-
-          <el-row style="text-align: center; padding: 10px 0;">
-            <el-link type="primary" href="https://sscms.com/docs/v7/getting-started/update.html" target="_blank">请参考系统升级帮助文档进行升级</el-link>
-          </el-row>
-        </div>
-        <div v-if="newPlugins.length > 0">
-          <h4 style="margin: 5px;">发现插件新版本</h4>
-
-          <el-table :data="newPlugins" style="width: 100%">
-            <el-table-column label="插件">
-              <template slot-scope="scope">
-                {{ scope.row.displayName }}
-              </template>
-            </el-table-column>
-            <el-table-column label="当前版本" width="80">
-              <template slot-scope="scope">
-                <el-tag type="primary">{{ scope.row.current }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="最新版本" width="80">
-              <template slot-scope="scope">
-                <el-tag type="success">{{ scope.row.version }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="createdDate" label="发布日期" width="140"></el-table-column>
-          </el-table>
-
-          <el-row style="text-align: center; padding: 10px 0;">
-            <el-button size="medium" type="warning" v-on:click="utils.addTab('管理插件', utils.getPluginsUrl('manage', {pageType: 'update'}));">立即升级</el-button>
-          </el-row>
-        </div>
-
-        <el-link style="padding: 0 10px;" slot="reference" :underline="false" type="warning">
-          <i class="ion-email-unread" style="font-size: 22px"></i>
-        </el-link>
-      </el-popover>
-
-      <!-- <el-dropdown v-on:command="btnCultureClick">
-        <span class="el-dropdown-link">
-          <i class="fa fa-language"></i>
-        </span>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="en-US" :disabled="culture === 'en-US'">English</el-dropdown-item>
-          <el-dropdown-item command="zh-CN" :disabled="culture === 'zh-CN'">中文</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown> -->
 
       <div v-if="siteId > 0" class="search">
         <input type="text" v-model="keyword" placeholder="内容搜索..." class="form-control">
