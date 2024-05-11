@@ -586,7 +586,7 @@ namespace SSCMS.Core.StlParser.StlElement
             else if(pageType == "详情页")
             {
                 toCity.AddRange(shengshi.Where(s => s.StartsWith(toPro)));
-                toCity.AddRange(zhixiashi.Where(s => s.StartsWith(toPro)));
+                toCity.AddRange(zhixiaquxian.Where(s => s.StartsWith(toPro)));
             }
 
             builder.Append($"<ul class='{ulClass}'>");
