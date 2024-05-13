@@ -10,6 +10,82 @@ namespace SSCMS.Core.StlParser.Utility
 {
 	public static class TemplateUtility
 	{
+        public static async Task<string> GetWTCustomItemTemplateStringAsync(string templateString, NameValueCollection selectedItems, NameValueCollection selectedValues, string containerClientId, IParseManager parseManager, ParseType contextType)
+        {
+            var context = parseManager.ContextInfo;
+
+            var pageInfo = parseManager.PageInfo;
+            var itemContainer = DbItemContainer.GetItemContainer(pageInfo);
+            var content = itemContainer.WTContentItem.Value;
+
+            parseManager.ContextInfo = parseManager.ContextInfo.Clone();
+            parseManager.ContextInfo.ContextType = contextType;
+            parseManager.ContextInfo.ItemContainer = itemContainer;
+            parseManager.ContextInfo.ContainerClientId = containerClientId;
+            //parseManager.ContextInfo.ChannelId = content.ChannelId;
+            //parseManager.ContextInfo.ContentId = content.Id;
+
+            parseManager.ContextInfo.SetWTContent(content);
+
+            var preSite = pageInfo.Site;
+            var prePageChannelId = pageInfo.PageChannelId;
+            var prePageContentId = pageInfo.PageContentId;
+            // if (content.SiteId != pageInfo.SiteId)
+            // {
+            //     var siteInfo = await parseManager.DatabaseManager.SiteRepository.GetAsync(content.SiteId);
+            //     parseManager.ContextInfo.Site = siteInfo;
+            //     pageInfo.ChangeSite(siteInfo, siteInfo.Id, 0, parseManager.ContextInfo);
+            // }
+
+            var theTemplateString = string.Empty;
+
+            if (selectedItems != null && selectedItems.Count > 0)
+            {
+                foreach (var itemTypes in selectedItems.AllKeys)
+                {
+                    var itemTypeArrayList = ListUtils.GetStringList(itemTypes);
+                    var isTrue = true;
+                    foreach (var itemType in itemTypeArrayList)
+                    {
+                        var (success, contentTemplateString) = await IsContentTemplateStringAsync(itemType, itemTypes,
+                            selectedItems, selectedValues, parseManager);
+                        if (!success)
+                        {
+                            isTrue = false;
+                        }
+                        else
+                        {
+                            theTemplateString = contentTemplateString;
+                        }
+                    }
+                    if (isTrue)
+                    {
+                        break;
+                    }
+                    theTemplateString = string.Empty;
+                }
+            }
+
+            if (string.IsNullOrEmpty(theTemplateString))
+            {
+                theTemplateString = templateString;
+            }
+
+            var innerBuilder = new StringBuilder(theTemplateString);
+            await parseManager.ParseInnerContentAsync(innerBuilder);
+
+            DbItemContainer.PopContentItem(pageInfo);
+
+            // if (content.SiteId != pageInfo.SiteId)
+            // {
+            //     pageInfo.ChangeSite(preSite, prePageChannelId, prePageContentId, parseManager.ContextInfo);
+            // }
+
+            parseManager.ContextInfo = context;
+
+            return innerBuilder.ToString();
+        }
+
         public static async Task<string> GetContentsItemTemplateStringAsync(string templateString, NameValueCollection selectedItems, NameValueCollection selectedValues, string containerClientId, IParseManager parseManager, ParseType contextType)
         {
             var context = parseManager.ContextInfo;
@@ -390,3 +466,4 @@ namespace SSCMS.Core.StlParser.Utility
         }
     }
 }
+

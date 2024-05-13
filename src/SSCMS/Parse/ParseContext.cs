@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using SSCMS.Enums;
 using SSCMS.Models;
+using SSCMS.Models.WT;
 
 namespace SSCMS.Parse
 {
@@ -95,6 +96,11 @@ namespace SSCMS.Parse
         public void SetContent(Content value)
         {
             Content = value;
+        }
+        public WTContent WTContent { get; set; }
+        public void SetWTContent(WTContent value)
+        {
+            WTContent = value;
         }
 
         public bool IsInnerElement { get; set; }

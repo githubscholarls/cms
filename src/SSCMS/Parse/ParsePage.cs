@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SSCMS.Enums;
 using SSCMS.Models;
+using SSCMS.Models.WT;
 using SSCMS.Services;
 
 namespace SSCMS.Parse
@@ -44,6 +45,7 @@ namespace SSCMS.Parse
         public Stack<KeyValuePair<int, Channel>> ChannelItems { get; }
 
         public Stack<KeyValuePair<int, Content>> ContentItems { get; }
+        public Stack<KeyValuePair<int, WTContent>> WTCustomItems { get; }
 
         public Stack<KeyValuePair<int, IDictionary<string, object>>> SqlItems { get; }
 
@@ -84,6 +86,7 @@ namespace SSCMS.Parse
             User = null;
             ChannelItems = new Stack<KeyValuePair<int, Channel>>(5);
             ContentItems = new Stack<KeyValuePair<int, Content>>(5);
+            WTCustomItems = new Stack<KeyValuePair<int, WTContent>>(5);
             SqlItems = new Stack<KeyValuePair<int, IDictionary<string, object>>>(5);
             SiteItems = new Stack<KeyValuePair<int, Site>>(5);
             EachItems = new Stack<KeyValuePair<int, object>>(5);
@@ -396,6 +399,12 @@ wnd_frame.src=url;}}
             }
 
             return retVal;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ParsePage page &&
+                   EqualityComparer<Stack<KeyValuePair<int, WTContent>>>.Default.Equals(WTCustomItems, page.WTCustomItems);
         }
 
         public string HeadCodesHtml

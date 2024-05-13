@@ -7,6 +7,7 @@ namespace SSCMS.Parse
         Each,
         SqlContent,
         Site,
-        Undefined
+        Undefined,
+        WTLink
 	}
 }

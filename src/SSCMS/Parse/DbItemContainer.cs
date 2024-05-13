@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SSCMS.Models;
+using SSCMS.Models.WT;
 
 namespace SSCMS.Parse
 {
@@ -70,12 +71,17 @@ namespace SSCMS.Parse
             {
                 dbItemContainer.EachItem = pageInfo.EachItems.Peek();
             }
+            if(pageInfo.WTCustomItems.Count > 0)
+            {
+                dbItemContainer.WTContentItem= pageInfo.WTCustomItems.Peek();
+            }
             return dbItemContainer;
         }
 
         public KeyValuePair<int, Channel> ChannelItem { get; private set; }
 
         public KeyValuePair<int, Content> ContentItem { get; private set; }
+        public KeyValuePair<int,WTContent> WTContentItem { get; private set; }
 
         public KeyValuePair<int, IDictionary<string, object>> SqlItem { get; private set; }
 
