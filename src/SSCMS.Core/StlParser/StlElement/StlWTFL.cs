@@ -84,7 +84,7 @@ namespace SSCMS.Core.StlParser.StlElement
                 var from = GetShortAddr(fromPro, fromCity, fromArea);
                 var to = GetShortAddr(toPro, toCity, toArea);
 
-                return($"<a target=\"_black\" href='https://www.chinawutong.com{href}' {TranslateUtils.ToAttributesString(attributes)}>{from}到{to}物流公司</a>");
+                return($"<a target=\"_black\" href='https://www.chinawutong.com/201{href}' {TranslateUtils.ToAttributesString(attributes)}>{from}到{to}物流公司</a>");
             
         }
 
