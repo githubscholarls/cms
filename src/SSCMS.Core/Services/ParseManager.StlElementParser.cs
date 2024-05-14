@@ -45,9 +45,9 @@ namespace SSCMS.Core.Services
         public Dictionary<string, Func<IParseManager, Task<object>>> ElementsToParseDic => new Dictionary<string, Func<IParseManager, Task<object>>>
         {
 
-            {StringUtils.ToLower(StlNewContents.ElementName), StlNewContents.ParseAsync},
-            {StringUtils.ToLower(StlBB.ElementName),StlBB.ParseAsync},
-            {StringUtils.ToLower(StlFirendLink.ElementName),StlFirendLink.ParseAsync},
+            {StringUtils.ToLower(StlFriendLinks.ElementName), StlFriendLinks.ParseAsync},
+            {StringUtils.ToLower(StlWTFL.ElementName),StlWTFL.ParseAsync},
+            {StringUtils.ToLower(StlFriendLink.ElementName),StlFriendLink.ParseAsync},
             {StringUtils.ToLower(StlB.ElementName),StlB.ParseAsync},
             {StringUtils.ToLower(StlA.ElementName), StlA.ParseAsync},
             {StringUtils.ToLower(StlAction.ElementName), StlAction.ParseAsync},

@@ -1,27 +1,29 @@
-﻿using Microsoft.AspNetCore.Components;
-using NPOI.SS.Formula;
-using NSwag;
-using Org.BouncyCastle.Asn1.X509;
-using SSCMS.Core.StlParser.Attributes;
-using SSCMS.Parse;
-using SSCMS.Services;
-using SSCMS.Utils;
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
-using static System.Net.WebRequestMethods;
+using SSCMS.Core.StlParser.Attributes;
+using SSCMS.Core.StlParser.Mocks;
+using SSCMS.Parse;
+using SSCMS.Core.StlParser.Models;
+using SSCMS.Core.StlParser.Utility;
+using SSCMS.Enums;
+using SSCMS.Models;
+using SSCMS.Services;
+using SSCMS.Utils;
+using SSCMS.Core.StlParser.Enums;
+using System.Collections.Specialized;
+using static SSCMS.Core.Utils.ColumnsManager;
+using System.Linq;
+using SSCMS.Models.WT;
+using Datory.Utils;
+using Org.BouncyCastle.Asn1.Cms;
 
 namespace SSCMS.Core.StlParser.StlElement
 {
-    [StlElement(Title = "获取物通网201友情链接")]
-    public static class StlFirendLink
+    [StlElement(Title = "内容列表", Description = "通过 stl:contents 标签在模板中显示内容列表")]
+    public class StlFriendLinks : StlListBase
     {
-        public const string ElementName = "stl:fl";
-
+        public const string ElementName = "stl:wtflcontents";
 
         [StlAttribute(Title = "外层ul")]
         private const string UlClass = nameof(UlClass);
@@ -521,20 +523,22 @@ namespace SSCMS.Core.StlParser.StlElement
 
         #endregion
 
-
         public static async Task<object> ParseAsync(IParseManager parseManager)
         {
+            var pageInfo = parseManager.PageInfo;
+            var contextInfo = parseManager.ContextInfo;
             var attributes = new NameValueCollection();
-
             var ulClass = string.Empty;
             var fromPro = string.Empty;
-            var fromCity = string.Empty; 
+            var fromCity = string.Empty;
             var fromArea = string.Empty;
             var startHref = string.Empty;
             var pageType = string.Empty;
             var toPro = string.Empty;
-
-
+            //特性
+            //var attributes = contextInfo.Attributes;
+            var listInfo = await ListInfo.GetListInfoAsync(parseManager, ParseType.WTLink);
+            //var dataSource = await GetContentsDataSourceAsync(parseManager, listInfo);
             foreach (var name in parseManager.ContextInfo.Attributes.AllKeys)
             {
                 var value = parseManager.ContextInfo.Attributes[name];
@@ -542,7 +546,7 @@ namespace SSCMS.Core.StlParser.StlElement
                 {
                     ulClass = value;
                 }
-                else if (StringUtils.EqualsIgnoreCase(name,FromPro))
+                else if (StringUtils.EqualsIgnoreCase(name, FromPro))
                 {
                     fromPro = value;
                 }
@@ -571,135 +575,252 @@ namespace SSCMS.Core.StlParser.StlElement
                     attributes[name] = value;
                 }
             }
-            return await ParseAsync(parseManager, ulClass, fromPro,fromCity,fromArea,toPro, pageType, string.IsNullOrEmpty(startHref) ? "https://www.chinawutong.com/201" : startHref, attributes);
+
+
+
+            var dataSource = WTGetLinkDataSource(fromPro,fromCity,fromArea,pageType, toPro);
+
+            //if (parseManager.ContextInfo.IsStlEntity)
+            //{
+            //    return ParseEntity(dataSource);
+            //}
+
+            var parsedContent = await ParseAsync(parseManager, listInfo, dataSource);
+            //if (pageInfo.EditMode == EditMode.Visual)
+            //{
+            //    var attributes = new NameValueCollection(contextInfo.Attributes);
+            //    VisualUtility.AddEditableToPage(pageInfo, contextInfo, attributes, parsedContent);
+            //    parsedContent = @$"<template {TranslateUtils.ToAttributesString(attributes)}>{parsedContent}</template>";
+            //}
+            return parsedContent;
         }
 
-        private static async Task<string> ParseAsync(IParseManager parseManager,string ulClass, string fromPro, string fromCity, string fromArea,string toPro,  string pageType, string StartHref, NameValueCollection attributes)
+        private static List<KeyValuePair<int, WTContent>> WTGetLinkDataSource(string fromPro,string fromCity,string fromArea, string pageType,string toPro)
         {
-            var builder = new StringBuilder();
-            List<string> toCity = new();
+            List<string> dataSource = new();
             if (pageType == "首页")
             {
-                toCity.AddRange(shenghui.ToArray());
-                toCity.AddRange(zhixiashi.ToArray());
+                dataSource.AddRange(shenghui.ToArray());
+                dataSource.AddRange(zhixiashi.ToArray());
             }
-            else if(pageType == "详情页")
+            else if (pageType == "详情页")
             {
-                toCity.AddRange(shengshi.Where(s => s.StartsWith(toPro)));
-                toCity.AddRange(zhixiaquxian.Where(s => s.StartsWith(toPro)));
+                dataSource.AddRange(shengshi.Where(s => s.StartsWith(toPro)));
+                dataSource.AddRange(zhixiaquxian.Where(s => s.StartsWith(toPro)));
             }
 
-            builder.Append($"<ul class='{ulClass}'>");
-            foreach (var item in toCity)
+            var list = new List<KeyValuePair<int, WTContent>>();
+            var i = 0;
+            foreach (var item in dataSource)
             {
-                var tos = item.Split(',');
-                var top = tos[0];
-                var toc = tos[1];
-                var toa = tos[2];
-                var href = await Get201Url(fromPro, fromCity, fromArea, top, toc, toa);
-
-                var from = GetShortAddr(fromPro, fromCity, fromArea);
-                var to = GetShortAddr(top, toc, toa);
-
-                builder.Append($"<li><a href='{StartHref}{href}'>{from}到{to}物流公司</a></li>");
+                var t = Utilities.GetStringList(item);
+                list.Add(new KeyValuePair<int, WTContent>(i++, new WTContent() { FirendLink=new FirendLink() { FromPro =fromPro, FromCity = fromCity, FromArea = fromArea, ToPro = t[0], ToCity = t[1], ToArea = t[2] } }));
             }
-            builder.Append($"</ul>");
+            return list;
+        }
+
+        protected static async Task<string> ParseAsync(IParseManager parseManager, ListInfo listInfo, List<KeyValuePair<int,WTContent>> dataSource)
+        {
+            var pageInfo = parseManager.PageInfo;
+
+            if (dataSource == null || dataSource.Count == 0) return string.Empty;
+
+            var builder = new StringBuilder();
+            if (listInfo.Layout == ListLayout.None)
+            {
+                if (!string.IsNullOrEmpty(listInfo.HeaderTemplate))
+                {
+                    builder.Append(listInfo.HeaderTemplate);
+                }
+
+                var isAlternative = false;
+                var isSeparator = false;
+                var isSeparatorRepeat = false;
+                if (!string.IsNullOrEmpty(listInfo.AlternatingItemTemplate))
+                {
+                    isAlternative = true;
+                }
+                if (!string.IsNullOrEmpty(listInfo.SeparatorTemplate))
+                {
+                    isSeparator = true;
+                }
+                if (!string.IsNullOrEmpty(listInfo.SeparatorRepeatTemplate))
+                {
+                    isSeparatorRepeat = true;
+                }
+                for (var i = 0; i < dataSource.Count; i++)
+                {
+                    var content = dataSource[i];
+                    pageInfo.WTCustomItems.Push(content);
+                    var templateString = isAlternative && i % 2 == 1
+                        ? listInfo.AlternatingItemTemplate
+                        : listInfo.ItemTemplate;
+
+                    if(content.Value.FirendLink!=null)
+                    {
+                        //更改模板
+                        var attributes = new NameValueCollection();
+                        attributes.Set(nameof(content.Value.FirendLink.FromPro), content.Value.FirendLink.FromPro);
+                        attributes.Set(nameof(content.Value.FirendLink.FromCity), content.Value.FirendLink.FromCity);
+                        attributes.Set(nameof(content.Value.FirendLink.FromArea), content.Value.FirendLink.FromArea);
+                        attributes.Set(nameof(content.Value.FirendLink.ToPro), content.Value.FirendLink.ToPro);
+                        attributes.Set(nameof(content.Value.FirendLink.ToCity), content.Value.FirendLink.ToCity);
+                        attributes.Set(nameof(content.Value.FirendLink.ToArea), content.Value.FirendLink.ToArea);
+                        templateString = templateString.Replace($"<{StlWTFL.ElementName}", $"<{StlWTFL.ElementName} {TranslateUtils.ToAttributesString(attributes)}");
+                    }
+                    builder.Append(await TemplateUtility.GetWTCustomItemTemplateStringAsync(templateString, listInfo.SelectedItems, listInfo.SelectedValues, string.Empty, parseManager, ParseType.WTLink));
+
+                    if (isSeparator && i != dataSource.Count - 1)
+                    {
+                        builder.Append(listInfo.SeparatorTemplate);
+                    }
+
+                    if (isSeparatorRepeat && (i + 1) % listInfo.SeparatorRepeat == 0 && i != dataSource.Count - 1)
+                    {
+                        builder.Append(listInfo.SeparatorRepeatTemplate);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(listInfo.FooterTemplate))
+                {
+                    builder.Append(listInfo.FooterTemplate);
+                }
+            }
+            else
+            {
+                var isAlternative = !string.IsNullOrEmpty(listInfo.AlternatingItemTemplate);
+
+                var tableAttributes = listInfo.GetTableAttributes();
+                var cellAttributes = listInfo.GetCellAttributes();
+
+                using var table = new HtmlTable(builder, tableAttributes);
+                if (!string.IsNullOrEmpty(listInfo.HeaderTemplate))
+                {
+                    table.StartHead();
+                    using (var tHead = table.AddRow())
+                    {
+                        tHead.AddCell(listInfo.HeaderTemplate, cellAttributes);
+                    }
+                    table.EndHead();
+                }
+
+                table.StartBody();
+
+                var columns = listInfo.Columns <= 1 ? 1 : listInfo.Columns;
+                var itemIndex = 0;
+
+                while (true)
+                {
+                    using var tr = table.AddRow();
+                    for (var cell = 1; cell <= columns; cell++)
+                    {
+                        var cellHtml = string.Empty;
+                        if (itemIndex < dataSource.Count)
+                        {
+                            var content = dataSource[itemIndex];
+
+                            pageInfo.WTCustomItems.Push(content);
+
+                            var templateString = isAlternative && itemIndex % 2 == 1 ? listInfo.AlternatingItemTemplate : listInfo.ItemTemplate;
+                            cellHtml = await TemplateUtility.GetContentsItemTemplateStringAsync(templateString, listInfo.SelectedItems, listInfo.SelectedValues, string.Empty, parseManager, ParseType.WTLink);
+                        }
+                        tr.AddCell(cellHtml, cellAttributes);
+                        itemIndex++;
+                    }
+                    if (itemIndex >= dataSource.Count) break;
+                }
+
+                table.EndBody();
+
+                if (!string.IsNullOrEmpty(listInfo.FooterTemplate))
+                {
+                    table.StartFoot();
+                    using (var tFoot = table.AddRow())
+                    {
+                        tFoot.AddCell(listInfo.FooterTemplate, cellAttributes);
+                    }
+                    table.EndFoot();
+                }
+            }
+
             return builder.ToString();
         }
 
-        private static async Task<string> Get201Url(string fromPro, string fromCity, string fromArea, string toPro, string toCity, string toArea)
+        private static object ParseEntity(List<KeyValuePair<int, Content>> dataSource)
         {
-            var url = "https://webapi.chinawutong.com/wlpageview/rediecturl/urlturned/?listwlline=" + HttpUtility.UrlEncode($"f={fromPro}-{fromCity}-{fromArea}&t={toPro}-{toCity}-{toArea}");
+            var contentInfoList = new List<IDictionary<string, object>>();
 
-            var resString = await HttpClientUtils.GetStringAsync(url);
-            if (string.IsNullOrEmpty(resString))
+            foreach (var row in dataSource)
             {
-                return string.Empty;
-            }
-            var res = Newtonsoft.Json.JsonConvert.DeserializeObject<UrlTurnedRes>(resString);
-            if (res is null || res.success != "true")
-            {
-                return string.Empty;
-            }
-            return res.data;
-        }
-        /// <summary>
-        /// {
-        ///    "success": "true",
-        ///    "errcode": "",
-        ///    "msg": "",
-        ///    "data": "/s5923227/"
-        ///}
-        /// </summary>
-        private class UrlTurnedRes
-        {
-            public string success { get; set; }
-            public string errcode { get; set; }
-            public string msg { get; set; }
-            public string data { get; set; }
-        }
-
-
-        public static string GetShortAddr(string pro, string city, string area)
-        {
-            try
-            {
-
-                string param = GetShortAddr(area);
-                if (string.IsNullOrWhiteSpace(param))
+                if (row.Value != null)
                 {
-                    param = GetShortAddr(city);
-                    if (string.IsNullOrWhiteSpace(param))
-                    {
-                        param = GetShortAddr(pro);
-                    }
-                }
-                return param;
-            }
-            catch
-            {
-            }
-
-            return "";
-        }
-
-        public static string GetShortAddr(string param, bool ispro = false)
-        {
-
-            try
-            {
-                /*
-             ①通用：2个汉字不处理
-             ②去掉≥3字以上：“地区”以及最后1字“市”“州”
-             ③去掉≥4字以上的：“盟”“自治州”“自治县”“自治旗”“直辖县”“市辖区”
-             */
-                if (!string.IsNullOrWhiteSpace(param) && param != "市辖区")
-                {
-                    if (param.Length > 4)
-                    {
-                        param = param.Replace("盟", "").Replace("自治州", "").Replace("自治县", "").Replace("自治旗", "").Replace("直辖县", "").Replace("市辖区", "");
-                    }
-                    if (param.Length >= 3)
-                    {
-                        if (param.Substring(param.Length - 2, 2) == "地区")
-                            param = param.Substring(0, param.Length - 2);
-                        else if (param.Substring(param.Length - 1, 1) == "市")
-                            param = param.Substring(0, param.Length - 1);
-                        else if (param.Substring(param.Length - 1, 1) == "州")
-                            param = param.Substring(0, param.Length - 1);
-                    }
-                    if (ispro)
-                    {
-                        param = param.Replace("省", String.Empty).Replace("区", String.Empty).Replace("自治区", "").Replace("直辖市", "").Replace("特别行政区", "");
-                    }
-                    return param;
+                    contentInfoList.Add(row.Value.ToDictionary());
                 }
             }
-            catch
+
+            return contentInfoList;
+        }
+
+        protected static async Task<List<KeyValuePair<int, Content>>> GetContentsDataSourceAsync(IParseManager parseManager, ListInfo listInfo)
+        {
+            var pageInfo = parseManager.PageInfo;
+            var contextInfo = parseManager.ContextInfo;
+
+            var dataManager = new StlDataManager(parseManager.DatabaseManager);
+            var channelId = await dataManager.GetChannelIdByLevelAsync(pageInfo.SiteId, contextInfo.ChannelId, listInfo.UpLevel, listInfo.TopLevel);
+            channelId = await dataManager.GetChannelIdByChannelIdOrChannelIndexOrChannelNameAsync(pageInfo.SiteId, channelId, listInfo.ChannelIndex, listInfo.ChannelName);
+
+            // channelId = await parseManager.DatabaseManager.ChannelRepository.GetChannelIdAsync(pageInfo.SiteId, channelId, listInfo.ChannelIndex, listInfo.ChannelName);
+            var taxisType = GetTaxisType(listInfo.Order);
+
+            return await parseManager.DatabaseManager.ContentRepository.ParserGetContentsDataSourceAsync(pageInfo.Site, channelId, contextInfo.ContentId, listInfo.GroupContent, listInfo.GroupContentNot, listInfo.Tags, listInfo.IsImageExists, listInfo.IsImage, listInfo.IsVideoExists, listInfo.IsVideo, listInfo.IsFileExists, listInfo.IsFile, listInfo.Since, listInfo.IsRelatedContents, listInfo.StartNum, listInfo.TotalNum, taxisType, listInfo.IsTopExists, listInfo.IsTop, listInfo.IsRecommendExists, listInfo.IsRecommend, listInfo.IsHotExists, listInfo.IsHot, listInfo.IsColorExists, listInfo.IsColor, listInfo.Scope, listInfo.GroupChannel, listInfo.GroupChannelNot, listInfo.Where, listInfo.Others, listInfo.Query);
+        }
+
+        private static TaxisType GetTaxisType(string order)
+        {
+            var taxisType = TaxisType.OrderByTaxisDesc;
+
+            if (!string.IsNullOrEmpty(order))
             {
+                if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderDefault))
+                {
+                    taxisType = TaxisType.OrderByTaxisDesc;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderBack))
+                {
+                    taxisType = TaxisType.OrderByTaxis;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderAddDate))
+                {
+                    taxisType = TaxisType.OrderByAddDateDesc;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderAddDateBack))
+                {
+                    taxisType = TaxisType.OrderByAddDate;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderLastModifiedDate))
+                {
+                    taxisType = TaxisType.OrderByLastModifiedDateDesc;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderLastModifiedDateBack))
+                {
+                    taxisType = TaxisType.OrderByLastModifiedDate;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderHits))
+                {
+                    taxisType = TaxisType.OrderByHits;
+                }
+                else if (StringUtils.EqualsIgnoreCase(order, StlParserUtility.OrderRandom))
+                {
+                    taxisType = TaxisType.OrderByRandom;
+                }
+                else
+                {
+                    taxisType = TranslateUtils.ToEnum<TaxisType>($"OrderBy{order}", TaxisType.OrderByTaxis);
+                }
             }
-            return "";
+
+            return taxisType;
         }
     }
 }
-

@@ -19,9 +19,9 @@ using static System.Net.WebRequestMethods;
 namespace SSCMS.Core.StlParser.StlElement
 {
     [StlElement(Title = "获取物通网201友情链接")]
-    public static class StlBB
+    public static class StlWTFL
     {
-        public const string ElementName = "stl:bb";
+        public const string ElementName = "stl:wtfl";
 
         private const string FromPro = nameof(FromPro);
         private const string FromCity = nameof(FromCity);
