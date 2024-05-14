@@ -44,7 +44,7 @@ namespace SSCMS.Core.StlParser.StlElement
             foreach (var name in parseManager.ContextInfo.Attributes.AllKeys)
             {
                 var value = parseManager.ContextInfo.Attributes[name];
-                if (StringUtils.EqualsIgnoreCase(name,FromPro))
+                if (StringUtils.EqualsIgnoreCase(name, FromPro))
                 {
                     fromPro = value;
                 }
@@ -73,24 +73,33 @@ namespace SSCMS.Core.StlParser.StlElement
                     attributes[name] = value;
                 }
             }
-            return await ParseAsync(parseManager, fromPro,fromCity,fromArea,toPro, toCity,toArea, attributes);
+            return await ParseAsync(parseManager, fromPro, fromCity, fromArea, toPro, toCity, toArea, attributes);
         }
 
-        private static async Task<string> ParseAsync(IParseManager parseManager, string fromPro, string fromCity, string fromArea,string toPro,  string toCity, string toArea, NameValueCollection attributes)
+        private static async Task<string> ParseAsync(IParseManager parseManager, string fromPro, string fromCity, string fromArea, string toPro, string toCity, string toArea, NameValueCollection attributes)
         {
-
-                var href = await Get201Url(fromPro, fromCity, fromArea, toPro, toCity, toArea);
-
-                var from = GetShortAddr(fromPro, fromCity, fromArea);
-                var to = GetShortAddr(toPro, toCity, toArea);
-
-                return($"<a target=\"_black\" href='https://www.chinawutong.com/201{href}' {TranslateUtils.ToAttributesString(attributes)}>{from}到{to}物流公司</a>");
             
+            string href = string.Empty;
+            try
+            {
+                href = await Get201Url("http://192.168.0.154", fromPro, fromCity, fromArea, toPro, toCity, toArea);
+            }
+            catch (Exception)
+            {
+                href = await Get201Url("https://webapi.chinawutong.com", fromPro, fromCity, fromArea, toPro, toCity, toArea);
+            }
+
+
+            var from = GetShortAddr(fromPro, fromCity, fromArea);
+            var to = GetShortAddr(toPro, toCity, toArea);
+
+            return($"<a target=\"_black\" href='https://www.chinawutong.com/201{href}' {TranslateUtils.ToAttributesString(attributes)}>{from}到{to}物流公司</a>");
+
         }
 
-        private static async Task<string> Get201Url(string fromPro, string fromCity, string fromArea, string toPro, string toCity, string toArea)
+        private static async Task<string> Get201Url(string wtapi, string fromPro, string fromCity, string fromArea, string toPro, string toCity, string toArea)
         {
-            var url = "https://webapi.chinawutong.com/wlpageview/rediecturl/urlturned/?listwlline=" + HttpUtility.UrlEncode($"f={fromPro}-{fromCity}-{fromArea}&t={toPro}-{toCity}-{toArea}");
+            var url = $"{wtapi}/wlpageview/rediecturl/urlturned/?listwlline=" + HttpUtility.UrlEncode($"f={fromPro}-{fromCity}-{fromArea}&t={toPro}-{toCity}-{toArea}");
 
             var resString = await HttpClientUtils.GetStringAsync(url);
             if (string.IsNullOrEmpty(resString))
