@@ -82,7 +82,7 @@ namespace SSCMS.Core.StlParser.StlElement
             string href = string.Empty;
             try
             {
-                href = await Get201Url(Environment.GetEnvironmentVariable("wtapi"), fromPro, fromCity, fromArea, toPro, toCity, toArea);
+                href = await Get201Url(Environment.GetEnvironmentVariable("wtapi")?? "http://192.168.0.154", fromPro, fromCity, fromArea, toPro, toCity, toArea);
             }
             catch (Exception)
             {
