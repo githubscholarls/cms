@@ -22,6 +22,7 @@ RUN echo `date +%Y-%m-%d-%H-%M-%S` > /app/sscms/_wwwroot/sitefiles/version.txt
 
 FROM base AS final
 WORKDIR /app
+ENV TZ=Asia/Shanghai
 COPY --from=publish /app/sscms .
 ENTRYPOINT ["dotnet", "SSCMS.Web.dll"]
 
