@@ -537,6 +537,7 @@ namespace SSCMS.Core.StlParser.StlElement
             var toPro = string.Empty;
             //特性
             //var attributes = contextInfo.Attributes;
+
             var listInfo = await ListInfo.GetListInfoAsync(parseManager, ParseType.WTLink);
             //var dataSource = await GetContentsDataSourceAsync(parseManager, listInfo);
             foreach (var name in parseManager.ContextInfo.Attributes.AllKeys)
@@ -546,21 +547,36 @@ namespace SSCMS.Core.StlParser.StlElement
                 {
                     ulClass = value;
                 }
-                else if (StringUtils.EqualsIgnoreCase(name, FromPro))
+                else if (StringUtils.EqualsIgnoreCase(name, FromPro)&&(!value.StartsWith('{')&&!value.StartsWith('<')))
                 {
                     fromPro = value;
+                }else if (StringUtils.EqualsIgnoreCase(name, FromPro))
+                {
+                    fromPro = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
                 }
-                else if (StringUtils.EqualsIgnoreCase(name, FromCity))
+                else if (StringUtils.EqualsIgnoreCase(name, FromCity) && (!value.StartsWith('{') && !value.StartsWith('<')))
                 {
                     fromCity = value;
                 }
-                else if (StringUtils.EqualsIgnoreCase(name, FromArea))
+                else if (StringUtils.EqualsIgnoreCase(name, FromCity))
+                {
+                    fromCity = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
+                }
+                else if (StringUtils.EqualsIgnoreCase(name, FromArea) && (!value.StartsWith('{') && !value.StartsWith('<')))
                 {
                     fromArea = value;
                 }
-                else if (StringUtils.EqualsIgnoreCase(name, ToPro))
+                else if (StringUtils.EqualsIgnoreCase(name, FromArea))
+                {
+                    fromArea = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
+                }
+                else if (StringUtils.EqualsIgnoreCase(name, ToPro) && (!value.StartsWith('{') && !value.StartsWith('<')))
                 {
                     toPro = value;
+                }
+                else if (StringUtils.EqualsIgnoreCase(name, ToPro))
+                {
+                    toPro = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
                 }
                 else if (StringUtils.EqualsIgnoreCase(name, StartHref))
                 {
