@@ -24,6 +24,10 @@ FROM base AS final
 WORKDIR /app
 ENV TZ=Asia/Shanghai
 COPY --from=publish /app/sscms .
+
+RUN mkdir -p /usr/share/fonts
+COPY /src/SSCMS.Web/fonts /usr/share/fonts
+
 ENTRYPOINT ["dotnet", "SSCMS.Web.dll"]
 
 # docker build -t sscms/core:dev .
