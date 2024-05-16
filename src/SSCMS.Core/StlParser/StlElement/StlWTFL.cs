@@ -77,11 +77,15 @@ namespace SSCMS.Core.StlParser.StlElement
         }
 
         private static async Task<string> ParseAsync(IParseManager parseManager, string fromPro, string fromCity, string fromArea, string toPro, string toCity, string toArea, NameValueCollection attributes)
-        {
+         {
 
             string href = string.Empty;
             try
             {
+#if DEBUG
+                Environment.SetEnvironmentVariable("wtapi", "https://webapi.chinawutong.com");
+#endif
+
                 href = await Get201Url(Environment.GetEnvironmentVariable("wtapi")?? "http://192.168.0.154", fromPro, fromCity, fromArea, toPro, toCity, toArea);
             }
             catch (Exception)
