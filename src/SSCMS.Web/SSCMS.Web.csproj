@@ -16,12 +16,20 @@
   <ItemGroup>
     <Compile Remove="packages\**" />
     <Compile Remove="plugins\**" />
+    <Compile Remove="wwwroot\deshi\**" />
+    <Compile Remove="wwwroot\WTData\**" />
     <Content Remove="packages\**" />
     <Content Remove="plugins\**" />
+    <Content Remove="wwwroot\deshi\**" />
+    <Content Remove="wwwroot\WTData\**" />
     <EmbeddedResource Remove="packages\**" />
     <EmbeddedResource Remove="plugins\**" />
+    <EmbeddedResource Remove="wwwroot\deshi\**" />
+    <EmbeddedResource Remove="wwwroot\WTData\**" />
     <None Remove="packages\**" />
     <None Remove="plugins\**" />
+    <None Remove="wwwroot\deshi\**" />
+    <None Remove="wwwroot\WTData\**" />
   </ItemGroup>
 
   <ItemGroup>
