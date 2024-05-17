@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SSCMS.Core.StlParser.StlElement;
+using SSCMS.Core.StlParser.StlElementWT;
 
 namespace SSCMS.Core.StlParser.Models
 {
@@ -8,6 +9,10 @@ namespace SSCMS.Core.StlParser.Models
     {
         public static SortedList<string, Type> Elements => new SortedList<string, Type>
         {
+            {
+                StlWTImgLBFZ.ElementName,
+                typeof(StlWTImgLBFZ)
+            },
             {
                 StlFriendLinks.ElementName,
                 typeof(StlFriendLinks)
