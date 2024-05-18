@@ -11,13 +11,8 @@ using System.Threading.Tasks;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.Fonts;
-using Senparc.Weixin.Annotations;
-using System.Security.Policy;
-using System.Security.Cryptography;
-using Senparc.NeuChar.App.AppStore;
-using MathNet.Numerics;
-using DocumentFormat.OpenXml.Bibliography;
 using SSCMS.Utils;
+using SixLabors.ImageSharp.Drawing;
 
 namespace SSCMS.Core.StlParser.StlElement
 {
@@ -30,25 +25,24 @@ namespace SSCMS.Core.StlParser.StlElement
         private const string SiteName = nameof(SiteName);
         private const string Id = nameof(Id);
         private const string Title = nameof(Title);
-        private const string LogoUp = nameof(LogoUp);
-        private const string LogoDown = nameof(LogoDown);
         private const string From = nameof(From);
         private const string To = nameof(To);
         private const string Description = nameof(Description);
         private const string DeliveryArea = nameof(DeliveryArea);
+        private static readonly string BGPath = System.IO.Path.Combine("WTTemplate", "Image", "立邦物流模板底图.jpg");
 
 
         public static async Task<object> ParseAsync(IParseManager parseManager)
         {
-
+             
 
             var webroot = parseManager.SettingsManager.WebRootPath;
-            var WTData = Path.Combine(webroot, "WTData");
+            var WTData = System.IO.Path.Combine(webroot, "WTData");
             if (!Directory.Exists(WTData))
             {
                 Directory.CreateDirectory(WTData);
             }
-            var ImgData = Path.Combine(WTData, "Image");
+            var ImgData = System.IO.Path.Combine(WTData, "Image");
             if (!Directory.Exists(ImgData))
             {
                 Directory.CreateDirectory(ImgData);
@@ -57,8 +51,6 @@ namespace SSCMS.Core.StlParser.StlElement
 
             var id = string.Empty;
             var title = string.Empty;
-            var logoUp = string.Empty;
-            var logoDown = string.Empty;
             var from = string.Empty;
             var to = string.Empty;
             var description = string.Empty;
@@ -84,22 +76,6 @@ namespace SSCMS.Core.StlParser.StlElement
                 else if (StringUtils.EqualsIgnoreCase(name, Title))
                 {
                     title = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
-                }
-                else if (StringUtils.EqualsIgnoreCase(name, LogoUp)&&!value.StartsWith("{"))
-                {
-                    logoUp = value;
-                }
-                else if (StringUtils.EqualsIgnoreCase(name, LogoUp))
-                {
-                    logoUp = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
-                }
-                else if (StringUtils.EqualsIgnoreCase(name, LogoDown) && !value.StartsWith("{"))
-                {
-                    logoDown = value;
-                }
-                else if (StringUtils.EqualsIgnoreCase(name, LogoDown))
-                {
-                    logoDown = await parseManager.ReplaceStlEntitiesForAttributeValueAsync(value);
                 }
                 else if (StringUtils.EqualsIgnoreCase(name, From) && !value.StartsWith("{"))
                 {
@@ -136,49 +112,143 @@ namespace SSCMS.Core.StlParser.StlElement
             }
 
 
-            var saveImgPath = Path.Combine(ImgData, "siteId" + parseManager.ContextInfo.Site.Id + "cId" + parseManager.ContextInfo.ContentId + "Id" +id +".jpg");
+            var saveImgPath = System.IO.Path.Combine(ImgData, "siteId" + parseManager.ContextInfo.Site.Id + "cId" + parseManager.ContextInfo.ContentId + "Id" +id +".jpg");
 
             foreach (var item in SystemFonts.Families)
             {
                 await Console.Out.WriteLineAsync(item.Name);
             }
 
-            using (var image = new Image<Rgba32>(225, 200, Color.White))
+            var bg = System.IO.Path.Combine(webroot,BGPath);
+
+
+            using (var img = Image.Load(bg))
             {
                 var fontFamily = SystemFonts.Families.FirstOrDefault(f => f.Name == "Microsoft YaHei");
-                var boldFont = fontFamily.CreateFont(10, FontStyle.Bold);
 
-                image.Mutate(ctx => ctx.Fill(Color.Red));
+                var fontSize = 40;
 
-                // Draw the yellow rectangle at the top
-                var yellowRectTop = new Rectangle(0, 15, 225, 2);
-                image.Mutate(ctx => ctx.Fill(Color.Yellow, yellowRectTop));
+                var boldFont = fontFamily.CreateFont(fontSize, FontStyle.Bold);
 
+                if (!string.IsNullOrEmpty(title))
+                {
+                    PathBuilder pathBuilder = new PathBuilder();
+                    pathBuilder.SetOrigin(new Point(350, 32));
 
-                // Draw the yellow rectangle inside the red one (bottom)
-                var yellowRectBottom = new Rectangle(0, 145, 225, 30);
-                image.Mutate(ctx => ctx.Fill(Color.Yellow, yellowRectBottom));
+                    pathBuilder.AddLine(new Point(0, 0), new Point(700, 0));
+                    var path = pathBuilder.Build();
 
+                    // Draw the text along the path wrapping at the end of the line
+                    var textOptions = new TextOptions(boldFont)
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        WrappingLength = path.ComputeLength()
 
-
-                // Top yellow text
-                image.Mutate(ctx => ctx.DrawText(title, boldFont, Color.Yellow, new PointF(5, 2)));
-
-                image.Mutate(ctx => ctx.DrawText(logoUp, boldFont, Color.White, new PointF(85, 45)));
-
-                image.Mutate(ctx => ctx.DrawText(from, boldFont, Color.White, new PointF(15, 60)));
-                image.Mutate(ctx => ctx.DrawText("<—", boldFont, Color.White, new PointF(95, 57)));
-                image.Mutate(ctx => ctx.DrawText("—>", boldFont, Color.White, new PointF(95, 62)));
-                image.Mutate(ctx => ctx.DrawText(to, boldFont, Color.White, new PointF(135, 60)));
-                image.Mutate(ctx => ctx.DrawText(logoDown, boldFont, Color.White, new PointF(85, 80)));
-
-                image.Mutate(ctx => ctx.DrawText(description, boldFont, Color.Red, new PointF(15, 150)));
-
-                image.Mutate(ctx => ctx.DrawText(deliveryArea, boldFont, Color.White, new PointF(10, 186)));
+                    };
 
 
-                // Save the image
-                image.Save(saveImgPath);
+                    //// Let's generate the text as a set of vectors drawn along the path
+                    var glyphs = TextBuilder.GenerateGlyphs(title, path, textOptions);
+
+                    img.Mutate(ctx => ctx
+                        .Fill(Color.White, glyphs));
+                }
+
+
+                if (!string.IsNullOrEmpty(from))
+                {
+                    PathBuilder fromPathBuilder = new PathBuilder();
+                    fromPathBuilder.SetOrigin(new Point(150, 125));
+                    fromPathBuilder.AddLine(new Point(0, 0), new Point(200, 0));
+
+                    var fromPath = fromPathBuilder.Build();
+
+                    var fromTextOption = new TextOptions(fontFamily.CreateFont(48, FontStyle.Bold))
+                    {
+
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        WrappingLength = fromPath.ComputeLength()
+                    };
+
+                    //// Let's generate the text as a set of vectors drawn along the path
+                    var fromglyphs = TextBuilder.GenerateGlyphs(from, fromPath, fromTextOption);
+
+                    img.Mutate(ctx => ctx
+                        .Fill(Color.FromRgb(201, 42, 58), fromglyphs));
+
+                }
+                if (!string.IsNullOrEmpty(to))
+                {
+                    PathBuilder toPathBuilder = new PathBuilder();
+                    toPathBuilder.SetOrigin(new Point(550, 125));
+                    toPathBuilder.AddLine(new Point(0, 0), new Point(200, 0));
+
+                    var toPath = toPathBuilder.Build();
+
+                    var toTextOption = new TextOptions(fontFamily.CreateFont(48, FontStyle.Bold))
+                    {
+
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        WrappingLength = toPath.ComputeLength()
+                    };
+
+                    //// Let's generate the text as a set of vectors drawn along the path
+                    var toglyphs = TextBuilder.GenerateGlyphs(to, toPath, toTextOption);
+
+                    img.Mutate(ctx => ctx
+                        .Fill(Color.FromRgb(201, 42, 58), toglyphs));
+                }
+
+                if (!string.IsNullOrEmpty(description))
+                {
+                    var lichengFontSize = 28;
+                    PathBuilder desPathBuilder = new PathBuilder();
+                    desPathBuilder.SetOrigin(new Point(350, 0));
+                    desPathBuilder.AddLine(new Point(0, 175), new Point(700, 175));
+
+                    var desPath = desPathBuilder.Build();
+
+                    var desTextOption = new TextOptions(fontFamily.CreateFont(lichengFontSize, FontStyle.Italic))
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        WrappingLength = desPath.ComputeLength()
+                    };
+
+                    //// Let's generate the text as a set of vectors drawn along the path
+                    var desglyphs = TextBuilder.GenerateGlyphs(description, desPath, desTextOption);
+
+                    img.Mutate(ctx => ctx
+                        .Fill(Color.FromRgb(201, 42, 58), desglyphs));
+                }
+                if (!string.IsNullOrEmpty(deliveryArea))
+                {
+                    var areaFontSize = 20;
+                    PathBuilder areaPathBuilder = new PathBuilder();
+                    areaPathBuilder.SetOrigin(new Point(420, 300));
+                    areaPathBuilder.AddLine(new PointF(0, 0), new PointF(510, 0));
+
+                    var areaPath = areaPathBuilder.Build();
+
+                    var areaFont = fontFamily.CreateFont(areaFontSize, FontStyle.Regular);
+
+                    var areaTextOptions = new TextOptions(areaFont)
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center, // 文本水平居中
+                        VerticalAlignment = VerticalAlignment.Center,     // 文本垂直居中
+                        WrappingLength = areaPath.ComputeLength(),
+                        LineSpacing = 1.5f
+                    };
+
+                    //// Let's generate the text as a set of vectors drawn along the path
+                    var areaglyphs = TextBuilder.GenerateGlyphs(deliveryArea, areaPath, areaTextOptions);
+
+                    img.Mutate(ctx => ctx
+                        .Fill(Color.Black, areaglyphs));
+                }
+                img.Save(saveImgPath);
             }
             return saveImgPath.Split("wwwroot")[1];
         }
