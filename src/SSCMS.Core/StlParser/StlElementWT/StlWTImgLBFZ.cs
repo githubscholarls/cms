@@ -250,7 +250,19 @@ namespace SSCMS.Core.StlParser.StlElement
                 }
                 img.Save(saveImgPath);
             }
-            return saveImgPath.Split("wwwroot")[1];
+            ///huizhoufz/WTData/Image/20240524/siteId1501cId0Id.jpg
+            
+
+            var url = saveImgPath.Split("wwwroot")[1];
+            var splitChar = url[0];
+            var endList = new List<string>
+            {
+                "WTData"
+            };
+            endList.AddRange(url.Split("WTData")[1].Split(new char[] { '/', '\\' }).ToList());
+            return splitChar + System.IO.Path.Combine(endList.ToArray());
+
+            
         }
     }
 }
