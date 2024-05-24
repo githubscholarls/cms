@@ -37,12 +37,12 @@ namespace SSCMS.Core.StlParser.StlElement
              
 
             var webroot = parseManager.SettingsManager.WebRootPath;
-            var WTData = System.IO.Path.Combine(webroot, "WTData");
+            var WTData = System.IO.Path.Combine(webroot, parseManager.ContextInfo.Site.SiteName,"WTData");
             if (!Directory.Exists(WTData))
             {
                 Directory.CreateDirectory(WTData);
             }
-            var ImgData = System.IO.Path.Combine(WTData, "Image");
+            var ImgData = System.IO.Path.Combine(WTData, "Image",DateTime.Now.ToString("yyyyMMdd"));
             if (!Directory.Exists(ImgData))
             {
                 Directory.CreateDirectory(ImgData);
