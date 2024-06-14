@@ -42,7 +42,7 @@ namespace SSCMS.Core.StlParser.StlElement
             {
                 Directory.CreateDirectory(WTData);
             }
-            var ImgData = System.IO.Path.Combine(WTData, "Image",DateTime.Now.ToString("yyyyMMdd"));
+            var ImgData = System.IO.Path.Combine(WTData, "Image", parseManager.ContextInfo.Content.AddDate?.ToString("yyyyMMdd"));
             if (!Directory.Exists(ImgData))
             {
                 Directory.CreateDirectory(ImgData);
