@@ -126,7 +126,7 @@ namespace SSCMS.Core.StlParser.StlElement
             {
                 var fontFamily = SystemFonts.Families.FirstOrDefault(f => f.Name == "Microsoft YaHei");
 
-                var fontSize = 15;
+                var fontSize = 25;
 
                 var boldFont = fontFamily.CreateFont(fontSize, FontStyle.Bold);
 
